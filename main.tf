@@ -50,3 +50,35 @@ resource "proxmox_virtual_environment_vm" "test_vm" {
     bridge = "vmbr0"
   }
 }
+## ----------------YouTrack----------------------------
+resource "proxmox_virtual_environment_vm" "youtrack_vm" {
+  name      = "tf-youtrack-server"
+  node_name = "pclaud"
+  vm_id     = 201
+
+  clone {
+    vm_id = 9000
+  }
+
+  cpu {
+    cores = 2
+  }
+
+  memory {
+    dedicated = 4096
+  }
+
+  agent {
+    enabled = true
+  }
+
+  disk {
+    datastore_id = "local-lvm"
+    size         = 30
+    interface    = "scsi0"
+  }
+
+  network_device {
+    bridge = "vmbr0"
+  }
+}
