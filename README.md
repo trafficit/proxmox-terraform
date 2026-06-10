@@ -27,3 +27,15 @@ The host running Terraform must have `age` and `sops` utilities installed, along
    ```bash
    git clone git@github.com:trafficit/proxmox-terraform.git
    cd proxmox-terraform
+Initialize the project to download the required providers:
+
+Bash
+terraform init
+Verify the execution plan before applying changes:
+
+Bash
+terraform plan
+Apply the configuration to provision the infrastructure:
+
+Bash
+terraform apply
