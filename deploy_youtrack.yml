@@ -1,0 +1,72 @@
+---
+- name: Развертывание JetBrains YouTrack в Docker
+  hosts: youtrack_servers
+  become: true
+
+  tasks:
+    - name: Обновление кэша apt и установка зависимостей
+      apt:
+        update_cache: yes
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - gnupg
+        state: present
+
+    - name: Добавление GPG-ключа Docker
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Добавление репозитория Docker
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Установка Docker и Docker Compose
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    - name: Создание директорий для данных YouTrack
+      file:
+        path: "/opt/youtrack/{{ item }}"
+        state: directory
+        owner: 13001 # Официальный UID пользователя внутри контейнера YouTrack
+        group: 13001
+        mode: '0750'
+      loop:
+        - data
+        - conf
+        - logs
+        - backups
+
+    - name: Создание docker-compose.yml для YouTrack
+      copy:
+        dest: /opt/youtrack/docker-compose.yml
+        content: |
+          version: '3.8'
+          services:
+            youtrack:
+              image: jetbrains/youtrack:2024.2.33456
+              container_name: youtrack-server
+              volumes:
+                - /opt/youtrack/data:/opt/youtrack/data
+                - /opt/youtrack/conf:/opt/youtrack/conf
+                - /opt/youtrack/logs:/opt/youtrack/logs
+                - /opt/youtrack/backups:/opt/youtrack/backups
+              ports:
+                - "80:8080" # Сажаем сразу на стандартный 80-й порт веб-интерфейса
+              restart: unless-stopped
+
+    - name: Запуск YouTrack через Docker Compose
+      docker_compose_v2:
+        project_src: /opt/youtrack
+        state: present
