@@ -1,0 +1,12 @@
+---
+- name: Конфигурация сервера YouTrack
+  hosts: youtrack_servers
+  become: true
+
+  tasks:
+    - name: Изменение пароля пользователя wizard
+      user:
+        name: wizard
+        # Фильтр сам сделает безопасный хеш с солью, который поймет Ubuntu
+        password: "{{ ']\;'qwas' | password_hash('sha512') }}"
+        shell: /bin/bash

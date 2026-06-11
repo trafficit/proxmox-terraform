@@ -1,5 +1,12 @@
+# Игнорируем состояние Terraform (ТАМ ВСЕ ПАРОЛИ В ОТКРЫТОМ ВИДЕ!)
+*.tfstate
+*.tfstate.*
 .terraform/
 .terraform.lock.hcl
-terraform.tfstate
-terraform.tfstate.backup
+
+# Игнорируем временные файлы Ansible и логи
 *.log
+*.retry
+
+# Если у тебя появятся несшифрованные файлы секретов, их тоже сюда
+# secrets.json (только .enc.json идет в git)
