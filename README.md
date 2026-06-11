@@ -31,11 +31,11 @@ Initialize the project to download the required providers:
 
 $
 terraform init
-Verify the execution plan before applying changes:
+# Verify the execution plan before applying changes:
 
 $
 terraform plan
-Apply the configuration to provision the infrastructure:
+# Apply the configuration to provision the infrastructure:
 
 $
 terraform apply
