@@ -16,6 +16,12 @@ variable "ubuntu_template_vm_id" {
   default     = 9000
 }
 
+variable "create_windows_vm" {
+  type        = bool
+  description = "Создавать Windows 11. Включать только когда шаблон уже есть на pclaud."
+  default     = false
+}
+
 variable "windows_template_vm_id" {
   type        = number
   description = "ID шаблона Windows 11 с OVMF, TPM 2.0 и VirtIO-драйверами."

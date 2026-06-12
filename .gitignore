@@ -11,3 +11,5 @@
 # Если у тебя появятся несшифрованные файлы секретов, их тоже сюда
 # secrets.json (только .enc.json идет в git)
 *.bak
+terraform.tfvars
+*.auto.tfvars

@@ -118,6 +118,8 @@ resource "proxmox_virtual_environment_vm" "youtrack_vm" {
 # 3. WINDOWS 11
 # ============================================================================
 resource "proxmox_virtual_environment_vm" "windows_vm" {
+  count = var.create_windows_vm ? 1 : 0
+
   name      = "tf-windows11"
   node_name = local.node
   vm_id     = 232

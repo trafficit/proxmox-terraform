@@ -1,12 +1,82 @@
 ---
 - name: Конфигурация сервера YouTrack
-  hosts: youtrack_servers
+  hosts: youtrack
   become: true
 
   tasks:
     - name: Изменение пароля пользователя wizard
       user:
         name: wizard
-        # Фильтр сам сделает безопасный хеш с солью, который поймет Ubuntu
-        password: "{{ ']\;'qwas' | password_hash('sha512') }}"
+        # Теперь кавычки экранированы правильно: снаружи одинарные, внутри двойные
+        password: "{{ ']\\;\"qwas' | password_hash('sha512') }}"
         shell: /bin/bash
+
+    - name: Обновление кэша пакетов apt
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Установка зависимостей для Docker
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+
+    - name: Добавление GPG-ключа Docker
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Добавление репозитория Docker
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
+        state: present
+
+    - name: Установка Docker и плагина Docker Compose
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+
+    - name: Создание директорий для YouTrack
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "13001" # Внутренний ID пользователя в контейнере JetBrains
+        group: "13001"
+        mode: '0750'
+      loop:
+        - /opt/youtrack/data
+        - /opt/youtrack/conf
+        - /opt/youtrack/logs
+        - /opt/youtrack/backups
+
+    - name: Создание docker-compose.yml
+      copy:
+        dest: /opt/youtrack/docker-compose.yml
+        content: |
+          version: '3.8'
+          services:
+            youtrack:
+              image: jetbrains/youtrack:2024.2.33456
+              container_name: youtrack-server
+              ports:
+                - "80:8080"
+              volumes:
+                - /opt/youtrack/data:/opt/youtrack/data
+                - /opt/youtrack/conf:/opt/youtrack/conf
+                - /opt/youtrack/logs:/opt/youtrack/logs
+                - /opt/youtrack/backups:/opt/youtrack/backups
+              restart: unless-stopped
+
+    - name: Запуск YouTrack через Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: /opt/youtrack
+        state: present
