@@ -1,0 +1,4 @@
+# Скопируй в terraform.tfvars (файл в .gitignore, если добавишь)
+create_windows_vm      = false
+ubuntu_template_vm_id  = 9000
+windows_template_vm_id = 9011
