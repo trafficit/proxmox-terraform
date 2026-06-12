@@ -52,10 +52,9 @@
       copy:
         dest: /opt/youtrack/docker-compose.yml
         content: |
-          version: '3.8'
           services:
             youtrack:
-              image: jetbrains/youtrack:2024.2.33456
+              image: jetbrains/youtrack:2026.1.13570
               container_name: youtrack-server
               volumes:
                 - /opt/youtrack/data:/opt/youtrack/data
@@ -67,6 +66,8 @@
               restart: unless-stopped
 
     - name: Запуск YouTrack через Docker Compose
-      docker_compose_v2:
-        project_src: /opt/youtrack
-        state: present
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: /opt/youtrack
+      register: compose_up
+      changed_when: "'Created' in compose_up.stdout or 'Started' in compose_up.stdout or 'Pulled' in compose_up.stdout"

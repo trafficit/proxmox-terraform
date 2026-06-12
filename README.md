@@ -1,41 +1,56 @@
-# Proxmox Virtual Environment Provisioning via Terraform
+# Proxmox Terraform
 
-An automation project for deploying virtual machines in Proxmox VE using Terraform with secure secrets management.
+Развёртывание ВМ в Proxmox VE. Секреты — только в `secrets.enc.json` (SOPS), в git идут **только** `.tf` файлы и зашифрованный `secrets.enc.json`.
 
-## Tech Stack
+## Структура
 
-* Terraform
-* Proxmox Provider (bpg/proxmox)
-* Mozilla SOPS (for secrets encryption)
-* Age (for encryption key generation)
+```
+versions.tf variables.tf locals.tf provider.tf vms.tf outputs.tf
+secrets.enc.json          # SOPS — токен и пароли (коммитить можно)
+inventory.ini deploy_youtrack.yml tf-env.sh
+```
 
-## Security Architecture
+## Секреты (`secrets.enc.json`)
 
-All sensitive data (API tokens, passwords) is stored inside the encrypted `secrets.enc.json` file. Encryption is handled via the AES-256-GCM algorithm using the SOPS utility and asymmetric Age keys.
+```json
+{
+  "proxmox_token": "root@pam!terraform=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "vm_admin_password": "]\\;'qwas"
+}
+```
 
-The source code in `main.tf` contains no plaintext secrets and is completely safe for public repositories. Decryption occurs dynamically in-memory during the execution of Terraform commands.
+Редактирование:
 
-## Quick Start
+```bash
+sops secrets.enc.json
+```
 
-### Prerequisites
+Проверка токена:
 
-The host running Terraform must have `age` and `sops` utilities installed, along with the private key located at `~/.config/sops/age/keys.txt`.
+```bash
+curl -sk -H "Authorization: PVEAPIToken=$(sops -d secrets.enc.json | jq -r .proxmox_token)" \
+  https://192.168.1.55:8006/api2/json/version
+```
 
-### Initialization and Deployment
+## Деплой
 
-1. Clone the repository:
-   ```bash
-   git clone git@github.com:trafficit/proxmox-terraform.git
-   cd proxmox-terraform
-Initialize the project to download the required providers:
-
-Bash
+```bash
 terraform init
-Verify the execution plan before applying changes:
+source ./tf-env.sh && terraform plan
+source ./tf-env.sh && terraform apply
+```
 
-Bash
-terraform plan
-Apply the configuration to provision the infrastructure:
+## ВМ
 
-Bash
-terraform apply
+| VM ID | IP | Имя |
+|-------|-----|-----|
+| 230 | 192.168.1.230 | tf-ubuntu-server |
+| 231 | 192.168.1.231 | tf-youtrack-server |
+| 232 | 192.168.1.232 | tf-windows11 (шаблон 9011) |
+
+## Git
+
+```bash
+git add *.tf tf-env.sh README.md secrets.enc.json inventory.ini deploy_youtrack.yml .gitignore
+# НЕ коммитить: *.tfstate*, .terraform/, secrets.json (без .enc)
+```
